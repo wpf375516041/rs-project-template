@@ -1,0 +1,19 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["chrono"] }
+tokio = { version = "*", features = ["full"] }
+anyhow = "1.0.100"
+chrono = "0.4.42"
+[target.'cfg(all(not(target_env = "msvc"), not(target_os = "windows")))'.dependencies]
+tikv-jemallocator = { version = "0.6", features = ["profiling", "unprefixed_malloc_on_supported_platforms"] }
+jemalloc_pprof = { version = "0.8.1", features = ["symbolize","flamegraph"] }
+pprof = { version = "0.15", features = ["flamegraph", "protobuf-codec"] }
+
+[[bin]]
+name = "main"
+path = "src/bin/main.rs"
