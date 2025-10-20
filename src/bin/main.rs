@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rs_project_template::common::pprof;
+use {{project-name}}::common::pprof;
 use tracing::{Level, info};
 use tracing_subscriber::fmt::time::ChronoLocal;
 
