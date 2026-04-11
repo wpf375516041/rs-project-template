@@ -1,5 +1,5 @@
 use anyhow::Result;
-use {{project-name}}::common::pprof;
+use {{crate_name}}::common::pprof;
 use tracing::{Level, info};
 use tracing_subscriber::fmt::time::ChronoLocal;
 
