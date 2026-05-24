@@ -1,2 +1,6 @@
 [template]
 cargo_generate_version = ">=0.10.0"
+
+[placeholders.project-name]
+type = "string"
+prompt = "Project name (kebab-case, e.g. my-awesome-service):"

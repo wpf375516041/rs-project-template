@@ -1,15 +1,8 @@
-#[allow(unused)]
 use tracing::info;
 
-pub fn use_jemalloc() {
-    #[cfg(not(target_env = "msvc"))]
-    use tikv_jemallocator::Jemalloc;
-
-    // 将 Jemalloc 设置为全局内存分配器
-    #[cfg(not(target_env = "msvc"))]
-    #[global_allocator]
-    static GLOBAL: Jemalloc = Jemalloc;
-}
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 pub fn start_memory_profilers() {
     // 配置 Jemalloc 内存分析参数

@@ -5,8 +5,6 @@ use tracing_subscriber::fmt::time::ChronoLocal;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // 使用 jemalloc 内存分配器
-    pprof::use_jemalloc();
     // tracing 日志初始化
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
