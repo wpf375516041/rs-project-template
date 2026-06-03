@@ -16,7 +16,7 @@
 | ------- | ----------------------------- | ------ | --------------------------------- |
 | macOS   | `aarch64-apple-darwin`        | ARM64  | Docker (cargo-zigbuild)           |
 | macOS   | `x86_64-apple-darwin`         | x86_64 | Docker (cargo-zigbuild)           |
-| Linux   | `x86_64-unknown-linux-musl`   | x86_64 | cargo zigbuild (musl 静态链接)    |
+| Linux   | `x86_64-unknown-linux-musl`   | x86_64 | cargo build (musl 静态链接)      |
 | Windows | `x86_64-pc-windows-msvc`      | x86_64 | cargo xwin build                  |
 
 > Linux 使用 musl 静态链接，生成的二进制无 glibc 依赖，可在任意 Linux 发行版（含 CentOS 7）上运行。
@@ -25,7 +25,7 @@
 
 - Rust 稳定版工具链
 - [Docker](https://docs.docker.com/get-docker/)（macOS 交叉编译）
-- [zig](https://ziglang.org/) + [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild)（Linux musl 构建）
+- musl-tools（Linux musl 构建：`sudo apt install musl-tools`）
 - [cargo-xwin](https://github.com/rust-cross/cargo-xwin) + clang/llvm（Windows MSVC 构建）
 - [just](https://github.com/casey/just)（可选，快捷构建命令）
 

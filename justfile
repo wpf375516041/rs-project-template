@@ -32,12 +32,12 @@ build-macos-x86_64-release:
     docker run --rm -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target x86_64-apple-darwin
 
-# Linux x86_64 musl (静态链接)
+# Linux x86_64 musl (静态链接, 需安装 musl-tools)
 build-linux-x86_64:
-    cargo zigbuild --target x86_64-unknown-linux-musl
+    cargo build --target x86_64-unknown-linux-musl
 
 build-linux-x86_64-release:
-    cargo zigbuild --release --target x86_64-unknown-linux-musl
+    cargo build --release --target x86_64-unknown-linux-musl
 
 # Windows x86_64 MSVC
 build-windows-x86_64:
