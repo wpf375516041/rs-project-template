@@ -17,3 +17,9 @@ pprof = { version = "0.15", features = ["flamegraph", "protobuf-codec"] }
 [[bin]]
 name = "main"
 path = "src/bin/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
