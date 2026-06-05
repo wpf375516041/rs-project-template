@@ -71,6 +71,25 @@ just lint
 just fmt
 ```
 
+## 缓存模式
+
+交叉编译的 Docker 工具链缓存支持两种位置，通过 `CROSS_CACHE_MODE` 环境变量控制：
+
+| 模式 | 缓存位置 | 说明 |
+| ---- | -------- | ---- |
+| `shared`（默认） | `~/.docker-rust-cross` | 所有项目共享，节省磁盘和首次构建时间 |
+| `project` | 项目内 `.docker-rust` / `.cache` | 项目独立缓存，适合 CI 或需隔离的场景 |
+
+生成项目时 `cargo generate` 会提示选择，结果写入 `.env`。运行时也可覆盖：
+
+```shell
+# 使用 .env 中的配置
+just build-linux-x86_64
+
+# 临时切换为项目级缓存
+CROSS_CACHE_MODE=project just build-linux-x86_64
+```
+
 ## 平台差异说明
 
 - **Windows (MSVC)**: Jemalloc 和 pprof 不可用，自动回退到系统默认内存分配器。

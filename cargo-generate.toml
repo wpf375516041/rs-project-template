@@ -1,3 +1,12 @@
 [template]
 cargo_generate_version = ">=0.10.0"
 exclude = ["justfile"]
+
+[placeholders.cross_cache_mode]
+type = "string"
+prompt = "Docker 交叉编译缓存位置？(project=项目内, shared=用户目录共享)"
+choices = ["project", "shared"]
+default = "shared"
+
+[hooks]
+post = ["configure-cache.rhai"]
