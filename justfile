@@ -4,14 +4,14 @@ xwin_image := "messense/cargo-xwin"
 # 项目根目录
 project_dir := justfile_directory()
 # 缓存模式：project=项目内, shared=用户目录共享（~/.docker-rust-cross）
-cache_mode := env_var_or_default("CROSS_CACHE_MODE", "shared")
+cache_mode := env("CROSS_CACHE_MODE", "shared")
 # 持久化目录：缓存 Rust 工具链和 Cargo 数据，避免每次 docker run 重复下载
-docker_rust := if cache_mode == "shared" { env_var("HOME") + "/.docker-rust-cross" } else { project_dir + "/.docker-rust" }
+docker_rust := if cache_mode == "shared" { env("HOME") + "/.docker-rust-cross" } else { project_dir + "/.docker-rust" }
 # zigbuild 和 xwin 镜像的工具链版本不同，需分开缓存
 zigbuild_rust := docker_rust + "/zigbuild"
 xwin_rust     := docker_rust + "/xwin"
 # xwin MSVC CRT/SDK 缓存目录
-cache_dir := if cache_mode == "shared" { env_var("HOME") + "/.docker-rust-cross/cache" } else { project_dir + "/.cache" }
+cache_dir := if cache_mode == "shared" { env("HOME") + "/.docker-rust-cross/cache" } else { project_dir + "/.cache" }
 # 以当前用户身份运行容器，避免产物属于 root；设置 HOME=/io 使缓存写入项目目录
 docker_user := "--user $(id -u):$(id -g) -e HOME=/io"
 
