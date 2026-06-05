@@ -78,7 +78,7 @@ just fmt
 | 模式 | 缓存位置 | 说明 |
 | ---- | -------- | ---- |
 | `shared`（默认） | `~/.docker-rust-cross` | 所有项目共享，节省磁盘和首次构建时间 |
-| `project` | 项目内 `.docker-rust` / `.cache` | 项目独立缓存，适合 CI 或需隔离的场景 |
+| `project` | 项目内 `.docker-rust` | 项目独立缓存，适合 CI 或需隔离的场景 |
 
 生成项目时 `cargo generate` 会提示选择，结果写入 `.env`。运行时也可覆盖：
 

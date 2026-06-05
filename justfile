@@ -10,8 +10,6 @@ docker_rust := if cache_mode == "shared" { env("HOME") + "/.docker-rust-cross" }
 # zigbuild 和 xwin 镜像的工具链版本不同，需分开缓存
 zigbuild_rust := docker_rust + "/zigbuild"
 xwin_rust     := docker_rust + "/xwin"
-# xwin MSVC CRT/SDK 缓存目录
-cache_dir := if cache_mode == "shared" { env("HOME") + "/.docker-rust-cross/cache" } else { project_dir + "/.cache" }
 # 以当前用户身份运行容器，避免产物属于 root；设置 HOME=/io 使缓存写入项目目录
 docker_user := "--user $(id -u):$(id -g) -e HOME=/io"
 
@@ -60,6 +58,7 @@ build-macos-arm64: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --target aarch64-apple-darwin
 
@@ -67,6 +66,7 @@ build-macos-arm64-release: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target aarch64-apple-darwin
 
@@ -75,6 +75,7 @@ build-macos-x86_64: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --target x86_64-apple-darwin
 
@@ -82,6 +83,7 @@ build-macos-x86_64-release: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target x86_64-apple-darwin
 
@@ -90,6 +92,7 @@ build-linux-x86_64: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --target x86_64-unknown-linux-musl
 
@@ -97,17 +100,18 @@ build-linux-x86_64-release: init-zigbuild-rust
     docker run --rm {{docker_user}} \
         -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
         -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{zigbuild_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target x86_64-unknown-linux-musl
 
 # Windows x86_64 MSVC (Docker + cargo-xwin，zigbuild 不支持 MSVC ABI)
-# XWIN_CACHE_DIR 持久化 MSVC CRT/SDK；挂载宿主机 cache_dir/xwin 到容器 /io/.cache/xwin
+# XWIN_CACHE_DIR 持久化 MSVC CRT/SDK；挂载宿主机 xwin_rust/.cache 到容器 /io/.cache
 build-windows-x86_64: init-xwin-rust
     docker run --rm {{docker_user}} \
         -e XWIN_CACHE_DIR=/io/.cache/xwin \
         -v {{xwin_rust}}/rustup:/usr/local/rustup \
         -v {{xwin_rust}}/cargo:/usr/local/cargo \
-        -v {{cache_dir}}/xwin:/io/.cache/xwin \
+        -v {{xwin_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{xwin_image}} \
         cargo xwin build --target x86_64-pc-windows-msvc
 
@@ -116,7 +120,7 @@ build-windows-x86_64-release: init-xwin-rust
         -e XWIN_CACHE_DIR=/io/.cache/xwin \
         -v {{xwin_rust}}/rustup:/usr/local/rustup \
         -v {{xwin_rust}}/cargo:/usr/local/cargo \
-        -v {{cache_dir}}/xwin:/io/.cache/xwin \
+        -v {{xwin_rust}}/.cache:/io/.cache \
         -v {{project_dir}}:/io -w /io {{xwin_image}} \
         cargo xwin build --release --target x86_64-pc-windows-msvc
 
