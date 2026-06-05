@@ -26,7 +26,7 @@ check-docker:
 init-zigbuild-rust: check-docker
     #!/usr/bin/env bash
     if [ -d "{{zigbuild_rust}}/rustup/toolchains" ]; then exit 0; fi
-    mkdir -p "{{zigbuild_rust}}/rustup" "{{zigbuild_rust}}/cargo"
+    mkdir -p "{{zigbuild_rust}}/rustup" "{{zigbuild_rust}}/cargo" "{{zigbuild_rust}}/.cache"
     docker run --rm --user $(id -u):$(id -g) {{docker_image}} tar -C /usr/local/rustup -cf - . | tar -C "{{zigbuild_rust}}/rustup" -xf -
     docker run --rm --user $(id -u):$(id -g) {{docker_image}} tar -C /usr/local/cargo -cf - . | tar -C "{{zigbuild_rust}}/cargo" -xf -
 
@@ -34,7 +34,7 @@ init-zigbuild-rust: check-docker
 init-xwin-rust: check-docker
     #!/usr/bin/env bash
     if [ -d "{{xwin_rust}}/rustup/toolchains" ]; then exit 0; fi
-    mkdir -p "{{xwin_rust}}/rustup" "{{xwin_rust}}/cargo"
+    mkdir -p "{{xwin_rust}}/rustup" "{{xwin_rust}}/cargo" "{{xwin_rust}}/.cache"
     docker run --rm --user $(id -u):$(id -g) {{xwin_image}} tar -C /usr/local/rustup -cf - . | tar -C "{{xwin_rust}}/rustup" -xf -
     docker run --rm --user $(id -u):$(id -g) {{xwin_image}} tar -C /usr/local/cargo -cf - . | tar -C "{{xwin_rust}}/cargo" -xf -
 
