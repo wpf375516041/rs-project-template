@@ -1,50 +1,118 @@
+# Docker 镜像
 docker_image := "ghcr.io/rust-cross/cargo-zigbuild"
+xwin_image := "messense/cargo-xwin"
+# 项目根目录
 project_dir := justfile_directory()
+# 持久化目录：缓存 Rust 工具链和 Cargo 数据，避免每次 docker run 重复下载
+docker_rust := project_dir + "/.docker-rust"
+# zigbuild 和 xwin 镜像的工具链版本不同，需分开缓存
+zigbuild_rust := docker_rust + "/zigbuild"
+xwin_rust     := docker_rust + "/xwin"
+# 以当前用户身份运行容器，避免产物属于 root；设置 HOME=/io 使缓存写入项目目录
+docker_user := "--user $(id -u):$(id -g) -e HOME=/io"
+
+# 检查 Docker 是否可用
+check-docker:
+    #!/usr/bin/env bash
+    if ! command -v docker &>/dev/null; then
+        echo "Error: docker not found. Install: https://docs.docker.com/get-docker/" >&2
+        exit 1
+    fi
+
+# 初始化 zigbuild 持久化目录（从镜像中复制预装工具链）
+# 挂载空目录会覆盖镜像中的预装内容，导致 cargo 找不到，所以需要先"播种"
+init-zigbuild-rust: check-docker
+    #!/usr/bin/env bash
+    if [ -d "{{zigbuild_rust}}/rustup/toolchains" ]; then exit 0; fi
+    mkdir -p "{{zigbuild_rust}}/rustup" "{{zigbuild_rust}}/cargo"
+    docker run --rm --user $(id -u):$(id -g) {{docker_image}} tar -C /usr/local/rustup -cf - . | tar -C "{{zigbuild_rust}}/rustup" -xf -
+    docker run --rm --user $(id -u):$(id -g) {{docker_image}} tar -C /usr/local/cargo -cf - . | tar -C "{{zigbuild_rust}}/cargo" -xf -
+
+# 初始化 xwin 持久化目录（从镜像中复制预装工具链）
+init-xwin-rust: check-docker
+    #!/usr/bin/env bash
+    if [ -d "{{xwin_rust}}/rustup/toolchains" ]; then exit 0; fi
+    mkdir -p "{{xwin_rust}}/rustup" "{{xwin_rust}}/cargo"
+    docker run --rm --user $(id -u):$(id -g) {{xwin_image}} tar -C /usr/local/rustup -cf - . | tar -C "{{xwin_rust}}/rustup" -xf -
+    docker run --rm --user $(id -u):$(id -g) {{xwin_image}} tar -C /usr/local/cargo -cf - . | tar -C "{{xwin_rust}}/cargo" -xf -
 
 default:
     @just --list
 
+# 本地构建
 build:
     cargo build
 
 build-release:
     cargo build --release
 
+# 交叉编译所有平台
 build-all: build-macos-arm64 build-macos-x86_64 build-linux-x86_64 build-windows-x86_64
 
 build-all-release: build-macos-arm64-release build-macos-x86_64-release build-linux-x86_64-release build-windows-x86_64-release
 
-# macOS ARM64 (Docker)
-build-macos-arm64:
-    docker run --rm -v {{project_dir}}:/io -w /io {{docker_image}} \
+# macOS ARM64 (Docker + zigbuild)
+build-macos-arm64: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --target aarch64-apple-darwin
 
-build-macos-arm64-release:
-    docker run --rm -v {{project_dir}}:/io -w /io {{docker_image}} \
+build-macos-arm64-release: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target aarch64-apple-darwin
 
-# macOS x86_64 (Docker)
-build-macos-x86_64:
-    docker run --rm -v {{project_dir}}:/io -w /io {{docker_image}} \
+# macOS x86_64 (Docker + zigbuild)
+build-macos-x86_64: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --target x86_64-apple-darwin
 
-build-macos-x86_64-release:
-    docker run --rm -v {{project_dir}}:/io -w /io {{docker_image}} \
+build-macos-x86_64-release: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
         cargo zigbuild --release --target x86_64-apple-darwin
 
-# Linux x86_64 musl (静态链接, 需安装 musl-tools)
-build-linux-x86_64:
-    cargo build --target x86_64-unknown-linux-musl
+# Linux x86_64 musl 静态链接 (Docker + zigbuild)
+build-linux-x86_64: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
+        cargo zigbuild --target x86_64-unknown-linux-musl
 
-build-linux-x86_64-release:
-    cargo build --release --target x86_64-unknown-linux-musl
+build-linux-x86_64-release: init-zigbuild-rust
+    docker run --rm {{docker_user}} \
+        -v {{zigbuild_rust}}/rustup:/usr/local/rustup \
+        -v {{zigbuild_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{docker_image}} \
+        cargo zigbuild --release --target x86_64-unknown-linux-musl
 
-# Windows x86_64 MSVC
-build-windows-x86_64:
-    cargo xwin build --target x86_64-pc-windows-msvc
+# Windows x86_64 MSVC (Docker + cargo-xwin，zigbuild 不支持 MSVC ABI)
+# XWIN_CACHE_DIR 持久化 MSVC CRT/SDK 到项目 .cache/xwin 目录
+build-windows-x86_64: init-xwin-rust
+    docker run --rm {{docker_user}} \
+        -e XWIN_CACHE_DIR=/io/.cache/xwin \
+        -v {{xwin_rust}}/rustup:/usr/local/rustup \
+        -v {{xwin_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{xwin_image}} \
+        cargo xwin build --target x86_64-pc-windows-msvc
 
-build-windows-x86_64-release:
-    cargo xwin build --release --target x86_64-pc-windows-msvc
+build-windows-x86_64-release: init-xwin-rust
+    docker run --rm {{docker_user}} \
+        -e XWIN_CACHE_DIR=/io/.cache/xwin \
+        -v {{xwin_rust}}/rustup:/usr/local/rustup \
+        -v {{xwin_rust}}/cargo:/usr/local/cargo \
+        -v {{project_dir}}:/io -w /io {{xwin_image}} \
+        cargo xwin build --release --target x86_64-pc-windows-msvc
 
 test:
     cargo test

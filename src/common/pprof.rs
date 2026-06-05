@@ -1,3 +1,4 @@
+#[cfg(not(target_env = "msvc"))]
 use tracing::info;
 
 #[cfg(not(target_env = "msvc"))]
